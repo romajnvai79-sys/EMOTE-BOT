@@ -1,7 +1,7 @@
 name: Unzip new.zip to Root
 
 on:
-  workflow_dispatch:   # manually run করা যাবে
+  workflow_dispatch:
 
 jobs:
   unzip:
@@ -9,20 +9,25 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install unzip utility
+      - name: Install unzip
         run: sudo apt-get update && sudo apt-get install unzip -y
 
       - name: Unzip new.zip to root folder
         run: |
-          unzip -o new.zip -d ./
-          rm -f new.zip  # চাইলে zip ফাইল unzip এর পর ডিলিট হবে
+          if [ -f "new.zip" ]; then
+            unzip -o new.zip -d ./
+            rm -f new.zip
+          else
+            echo "❌ new.zip file not found!"
+            exit 1
+          fi
 
       - name: Commit and Push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add .
-          git commit -m "Unzipped new.zip to root"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Unzipped new.zip to root"
           git push
