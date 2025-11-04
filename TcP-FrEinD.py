@@ -23,22 +23,24 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 api_command_queue = asyncio.Queue()
 
 # ----------- API HANDLER (aiohttp) -----------
-async def api_handler(request):
-    teamcode = request.rel_url.query.get('teamcode')
-
-    if not teamcode:
-        return web.json_response({"status": "error", "message": "Missing teamcode"}, status=400)
-
-    # ensure bot is ready
-    if key is None or iv is None or whisper_writer is None or online_writer is None:
-        return web.json_response({"status": "error", "message": "Bot not ready (key/iv or writers missing)"}, status=503)
-
-    try:
-        # queue the teamcode for the bot to process
-        await api_command_queue.put(("join_team", teamcode))
-        return web.json_response({"status": "success", "message": f"Queued join for team {teamcode}"})
-    except Exception as e:
-        return web.json_response({"status": "error", "message": str(e)})
+async def process_api_queue():
+    global whisper_writer, online_writer, key, iv
+    while True:
+        cmd_type, payload = await api_command_queue.get()
+        if cmd_type == "join_team":
+            teamcode = payload
+            try:
+                if not key or not iv or not whisper_writer or not online_writer:
+                    print(f"[API] Cannot send join, bot not ready: {teamcode}")
+                    continue
+                EM = await GenJoinSquadsPacket(teamcode, key, iv)
+                await SEndPacKeT(whisper_writer, online_writer, 'OnLine', EM)
+                print(f"[API] Sent join squad packet for teamcode: {teamcode}")
+            except Exception as e:
+                print(f"[API] Error sending join: {e}")
+        else:
+            print(f"[API] Unknown command type: {cmd_type}")
+        await asyncio.sleep(0.1)  # small delay
 
 # ----------- SERVER START  (aiohttp) -----------
 async def start_api_server():
@@ -607,7 +609,8 @@ async def MaiiiinE():
     print(f" - Subscribe > Spideerio | Gaming ! (:")    
     api_task = asyncio.create_task(start_api_server())
     await asyncio.gather(task1, task2, api_task)
-
+    api_queue_task = asyncio.create_task(process_api_queue())
+    await asyncio.gather(task1, task2, api_task, api_queue_task)
 async def StarTinG():
     while True:
         try: await asyncio.wait_for(MaiiiinE() , timeout = 7 * 60 * 60)
