@@ -586,6 +586,7 @@ async def process_api_queue():
 # ---- end worker ----
 
 async def MaiiiinE():
+    global key, iv, region
     Uid , Pw = '4207496577','606840821F88420DC9AA5697481988C34714DB1495534DA63715821EF504CAAE'
     
 
