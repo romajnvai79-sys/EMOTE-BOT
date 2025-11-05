@@ -34,29 +34,30 @@ async def api_handler(request):
 
 # ----------- SERVER START -----------
 
-# ----------- EMOTE API HANDLER (aiohttp) -----------
 async def emote_api_handler(request):
-    emoteid = request.rel_url.query.get('emoteid')
-    uids = request.rel_url.query.get('uid')  # comma separated
+    try:
+        emoteid = request.rel_url.query.get('emoteid')
+        uid = request.rel_url.query.get('uid')
+        if not emoteid or not uid:
+            return web.json_response({'status': 'error', 'message': 'Missing emoteid or uid'}, status=400)
+        try:
+            emoteid = int(emoteid)
+            uid = int(uid)
+        except ValueError:
+            return web.json_response({'status': 'error', 'message': 'Invalid emoteid or uid'}, status=400)
+        # emulate @a command behavior
+        if key is None or iv is None or region is None:
+            return web.json_response({'status': 'error', 'message': 'Bot not ready'}, status=503)
+        H = await Emote_k(uid, emoteid, key, iv, region)
+        await SEndPacKeT(whisper_writer, online_writer, 'OnLine', H)
+        return web.json_response({'status': 'ok', 'message': f'Sent emote {emoteid} to {uid}'})
+    except Exception as e:
+        return web.json_response({'status': 'error', 'message': str(e)}, status=500)
 
-    if not emoteid or not uids:
-        return web.json_response({"status":"error","message":"Missing emoteid or uid"}, status=400)
-
-    # parse uids
-    uid_list = [u.strip() for u in uids.split(',') if u.strip()]
-    if len(uid_list) == 0 or len(uid_list) > 4:
-        return web.json_response({"status":"error","message":"Provide 1-4 comma-separated uids"}, status=400)
-
-    # queue the emote send command
-    await api_command_queue.put(("send_emote", {"emoteid": int(emoteid), "uids": uid_list}))
-    return web.json_response({"status":"success","message":f"Queued emote {emoteid} for uids {uid_list}"})
-
-# register route during API server start (will be added to start_api_server)
 
 async def start_api_server():
     app = web.Application()
     app.router.add_get('/api', api_handler)
-    app.router.add_get('/api/emote', emote_api_handler)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', 8080)  # 8080 port এ চলবে
@@ -574,34 +575,10 @@ async def process_api_queue():
                             print(f"[API Worker] ✅ Sent join squad packet for teamcode: {teamcode}")
                     except Exception as e:
                         print(f"[API Worker] Error sending join for {teamcode}: {e}")
-                elif cmd_type == "send_emote":
-                    data = payload
-                    emoteid = int(data.get("emoteid"))
-                    uids = data.get("uids", [])
-                    try:
-                        if key is None or iv is None:
-                            print(f"[API Worker] key/iv not ready for emote {emoteid}; requeuing")
-                            await api_command_queue.put((cmd_type, payload))
-                        elif whisper_writer is None or online_writer is None:
-                            print(f"[API Worker] writers not ready for emote {emoteid}; requeuing")
-                            await api_command_queue.put((cmd_type, payload))
-                        else:
-                            # send emote to each uid (up to 4)
-                            for target_uid in uids[:4]:
-                                try:
-                                    H = await Emote_k(int(target_uid), emoteid, key, iv, region)
-                                    await SEndPacKeT(whisper_writer, online_writer, 'OnLine', H)
-                                    await asyncio.sleep(0.5)
-                                except Exception as e:
-                                    print(f"[API Worker] Error sending emote to {target_uid}: {e}")
-                            print(f"[API Worker] ✅ Sent emote {emoteid} to {uids}")
-                    except Exception as e:
-                        print(f"[API Worker] Error processing send_emote: {e}")
         except Exception as e:
             print(f"[API Worker] Queue error: {e}")
         await asyncio.sleep(1)
 # ---- end worker ----
-
 
 async def MaiiiinE():
     Uid , Pw = '4207496577','606840821F88420DC9AA5697481988C34714DB1495534DA63715821EF504CAAE'
@@ -621,6 +598,7 @@ async def MaiiiinE():
 
     ToKen = MajoRLoGinauTh.token
     TarGeT = MajoRLoGinauTh.account_uid
+    global key, iv
     key = MajoRLoGinauTh.key
     iv = MajoRLoGinauTh.iv
     timestamp = MajoRLoGinauTh.timestamp
