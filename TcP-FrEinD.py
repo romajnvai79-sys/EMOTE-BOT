@@ -629,7 +629,7 @@ async def process_api_queue():
 async def MaiiiinE():
     global key, iv, region  # <-- অবশ্যই ফাংশনের শুরুতে লিখো
 
-    Uid , Pw = '4289072864','C2F6FCD0B6A19FFF775BB15E72987C994B1FEAD13D11EB74674ADED40785C160'
+    Uid , Pw = '4330393266','A78D0FF9DF9593E12AB386DB42D0DA3BFFD1FC3B02C235170BE4BFBDB686598B'
     
     open_id , access_token = await GeNeRaTeAccEss(Uid , Pw)
     if not open_id or not access_token: 
