@@ -105,7 +105,7 @@ async def start_api_server():
 
     runner = web.AppRunner(app)
     await runner.setup()
-    port = int(os.getenv("PORT", 9090))
+    port = int(os.getenv("PORT", 8080))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
@@ -629,7 +629,7 @@ async def process_api_queue():
 async def MaiiiinE():
     global key, iv, region  # <-- অবশ্যই ফাংশনের শুরুতে লিখো
 
-    Uid , Pw = '4371482394','JANVA_86QV7_BY_SPIDEERIO_GAMING_QTZ0Z'
+    Uid , Pw = '4371487438','JANVA_FHK44_BY_SPIDEERIO_GAMING_DXN5B'
     
     open_id , access_token = await GeNeRaTeAccEss(Uid , Pw)
     if not open_id or not access_token: 
